@@ -28,8 +28,11 @@ def search_name_on_page(url, name):
                 name_cell = cells[2].get_text()
                 if name in name_cell:
                     print("Вот что я нашел:")
-                    for i, cell in enumerate(cells):
-                        print(f"Строка {i}: {cell.get_text()}")
+                    print(f"Рейтинг: {cells[0].get_text()}")
+                    print(f"Какая-то лажа: {cells[1].get_text()}")
+                    print(f"Имя: {cells[2].get_text()}")
+                    print(f"Доки: {cells[3].get_text()}")
+                    print(f"Средний балл: {cells[4].get_text()}")
                     return True
     return False
 
