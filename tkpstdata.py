@@ -27,7 +27,7 @@ def search_name_on_page(url, name):
             if len(cells) > 2: 
                 name_cell = cells[2].get_text()
                 if name in name_cell:
-                    print("Найденная информация:")
+                    print("Вот что я нашел:")
                     for i, cell in enumerate(cells):
                         print(f"Строка {i}: {cell.get_text()}")
                     return True
