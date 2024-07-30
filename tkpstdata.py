@@ -1,32 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-from telegram import Update, Bot
+from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext, CallbackQueryHandler
 from datetime import datetime, time as dt_time
 import pytz
-import asyncio
 import json
 import os
 import logging
 
-TOKEN = 'ТОКЕН Я НЕ ДАМ'
+TOKEN = '7413686501:AAElURaHJvQTodFF253xqEN6sbiCQfSEVC8'
 CHAT_IDS_FILE = 'chat_ids.json'
+BASE_URL = 'https://tkpst.ru/applicants/rating9/'
+NAME_TO_SEARCH = 'Лобачев Арсений Сергеевич'
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def get_links(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        logger.error(f"Ошибка при загрузке страницы :( - {e}")
-        return []
-    
-    soup = BeautifulSoup(response.content, 'html.parser')
-    links = [urljoin(url, link['href']) for link in soup.find_all('a', href=True)]
-    return links
 
 def search_name_on_page(url, name):
     try:
@@ -34,7 +22,7 @@ def search_name_on_page(url, name):
         response.raise_for_status()
     except requests.RequestException as e:
         logger.error(f"Ошибка при загрузке страницы :( - {e}")
-        return False
+        return f"Ошибка при загрузке страницы: {e}"
     
     soup = BeautifulSoup(response.content, 'html.parser')
     text = soup.get_text()
@@ -61,9 +49,7 @@ async def send_telegram_message(chat_id, token, message):
         logger.error(f"Ошибка при отправке сообщения :( {e}")
 
 async def job(context: CallbackContext):
-    base_url = 'https://tkpst.ru/applicants/rating9/'
-    name_to_search = 'Лобачев Арсений Сергеевич'
-    result = search_name_on_page(base_url, name_to_search)
+    result = search_name_on_page(BASE_URL, NAME_TO_SEARCH)
     
     chat_ids = load_chat_ids()
     if chat_ids:
@@ -76,7 +62,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.message.chat_id
     save_chat_id(chat_id)
     await update.message.reply_text("Бим-бам-бом...")
-    await job(context)
+
+    result = search_name_on_page(BASE_URL, NAME_TO_SEARCH)
+    await send_telegram_message(chat_id, TOKEN, result)
+
+    keyboard = [[InlineKeyboardButton("Проверить еще раз", callback_data='check_again')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(text='Что-бы проверить еще раз нажми на кнопку ниже', reply_markup=reply_markup)
+
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+    await query.message.reply_text("Бим-бам-бом...")
+
+    chat_id = query.message.chat_id
+    result = search_name_on_page(BASE_URL, NAME_TO_SEARCH)
+    await send_telegram_message(chat_id, TOKEN, result)
+
+    keyboard = [[InlineKeyboardButton("Проверить еще раз", callback_data='check_again')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.message.reply_text(text='Что-бы проверить еще раз нажми на кнопку ниже', reply_markup=reply_markup)
 
 def load_chat_ids():
     try:
@@ -103,11 +108,12 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(button))
 
     timezone = pytz.timezone('Asia/Yekaterinburg')  
     target_time = timezone.localize(datetime.strptime("20:05", "%H:%M")).time()
 
-    application.job_queue.run_daily(job, time=dt_time(hour=target_time.hour, minute=target_time.minute, tzinfo=timezone))
+    application.job_queue.run_daily(job, time=target_time)
     
     logger.info("Пим-бам-бум...")
     application.run_polling()
