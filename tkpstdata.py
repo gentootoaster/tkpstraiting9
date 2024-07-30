@@ -8,7 +8,7 @@ import json
 import os
 import logging
 
-TOKEN = '7413686501:AAElURaHJvQTodFF253xqEN6sbiCQfSEVC8'
+TOKEN = ''
 CHAT_IDS_FILE = 'chat_ids.json'
 BASE_URL = 'https://tkpst.ru/applicants/rating9/'
 NAME_TO_SEARCH = 'Лобачев Арсений Сергеевич'
