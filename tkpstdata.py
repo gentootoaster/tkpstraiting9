@@ -10,7 +10,7 @@ import json
 import os
 import logging
 
-TOKEN = '7413686501:AAElURaHJvQTodFF253xqEN6sbiCQfSEVC8'
+TOKEN = 'ТОКЕН Я НЕ ДАМ'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
